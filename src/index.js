@@ -66,12 +66,17 @@ function extractRevertDataFromTraces(traces) {
             from: trace.from_address,
             to: trace.to_address,
             caller: marketCall.from_address,
+            callee: marketCall.to_address,
             status: trace.receipt_status,
             affiliateId: affiliateBytes.slice((4 + 32 - 20) * 2),
             value: trace.value.toString(10),
             gasPrice: trace.gas_price,
             gas: trace.gas,
             params: marketCall.params,
+            priorCallees: _.uniq(_.takeWhile(
+                flattenTrace(trace, c => c.call_type !== 'staticcall'),
+                c => c.trace_address !== marketCall.trace_address,
+            ).map(c => c.to_address)),
             cause: {
                 error: cause.error,
                 callType: cause.call_type,
@@ -103,7 +108,7 @@ function extractRevertDataFromTraces(traces) {
             })),
         });
     }
-    return data;
+    return data.sort((a, b) => a.height - b.height);
 }
 
 function findMarketCall(root) {
@@ -171,6 +176,17 @@ function findFillOrderCalls(root) {
             : { result: decodeFillOrderCallOutput(c.output) }
         ),
     }));
+}
+
+function flattenTrace(root, filter = () => true) {
+    const calls = [];
+    if (filter(root)) {
+        calls.push(root);
+        for (const child of root.children) {
+            calls.push(...flattenTrace(child, filter));
+        }
+    }
+    return calls;
 }
 
 function decodeFillOrderCallInput(input) {
