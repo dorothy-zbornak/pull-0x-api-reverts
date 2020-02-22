@@ -25,7 +25,6 @@ function createQuery(opts = {}) {
     const since = chrono.parseDate(opts.since || 'one day ago');
     const until = chrono.parseDate(opts.until || 'now');
     const selectors = opts.selectors || [];
-    const limit = opts.limit || 1024 * 16;
     const targets = opts.targets || [];
     return `
         SELECT
@@ -82,6 +81,5 @@ function createQuery(opts = {}) {
         WHERE
             a.transaction_hash = b.transaction_hash
         ORDER BY CONCAT(a.block_number, '_', a.transaction_index, '_', a.trace_address) ASC
-        LIMIT ${limit}
     `;
 }

@@ -12,7 +12,6 @@ const artifacts = require('./artifacts');
 const ARGV = yargs
     .string('since')
     .string('until')
-    .number('limit')
     .string('output')
     .argv;
 
@@ -45,7 +44,6 @@ const SEARCH_TARGETS = [
 async function fetchTraces() {
     return createTraces(await fetchRevertTraces({
         targets: SEARCH_TARGETS,
-        limit: ARGV.limit,
         since: ARGV.since,
         until: ARGV.until,
     }));
