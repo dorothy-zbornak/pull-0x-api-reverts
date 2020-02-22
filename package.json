@@ -6,7 +6,10 @@
     "license": "Apache-2.0",
     "private": true,
     "scripts": {
-        "start": "node src/fetch.js"
+        "start": "node src/fetch.js",
+        "classify": "python py/classify.py",
+        "plot-by-day": "python py/plot_by_day.py",
+        "plot-by-affiliate": "python py/plot_by_affiliate.py"
     },
     "dependencies": {
         "@google-cloud/bigquery": "^4.7.0",

@@ -2,3 +2,4 @@ node_modules
 credentials.json
 output.json
 **/*.log
+src/exp
