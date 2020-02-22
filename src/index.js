@@ -13,6 +13,7 @@ const ARGV = yargs
     .string('since')
     .string('until')
     .number('limit')
+    .string('output')
     .argv;
 
 const SEARCH_TARGETS = [
@@ -34,7 +35,11 @@ const SEARCH_TARGETS = [
 
 (async () => {
     const traces = await fetchTraces();
-    console.log(JSON.stringify(extractRevertDataFromTraces(traces), null, '  '));
+    const output = JSON.stringify(extractRevertDataFromTraces(traces), null, '  ');
+    console.log(output);
+    if (ARGV.output) {
+        await fs.writeFile(ARGV.output, output, 'utf-8');
+    }
 })();
 
 async function fetchTraces() {
@@ -57,10 +62,10 @@ function extractRevertDataFromTraces(traces) {
         if (!affiliateBytes.startsWith('fbc019a7')) {
             continue;
         }
-        const cause = blameRevert(marketCall);
         const fillOrderCalls = findFillOrderCalls(marketCall);
         data.push({
             height: trace.block_number,
+            timestamp: Math.floor(new Date(trace.block_timestamp.value).getTime() / 1000),
             hash: txHash,
             name: marketCall.name,
             from: trace.from_address,
@@ -77,19 +82,7 @@ function extractRevertDataFromTraces(traces) {
                 flattenTrace(trace, c => c.call_type !== 'staticcall'),
                 c => c.trace_address !== marketCall.trace_address,
             ).map(c => c.to_address)),
-            cause: {
-                error: cause.error,
-                callType: cause.call_type,
-                caller: cause.from_address,
-                callee: cause.to_address,
-                input: cause.input,
-                value: cause.value.toString(10),
-                gas: cause.gas,
-            },
             fills: fillOrderCalls.map(f => ({
-                error: f.error,
-                params: f.params,
-                result: f.result,
                 hint: (() => {
                     const makerAsset = f.params.order.makerAssetData;
                     if (makerAsset.indexOf(addresses.bridges.kyber.slice(2)) !== -1) {
@@ -103,6 +96,25 @@ function extractRevertDataFromTraces(traces) {
                     }
                     if (makerAsset.indexOf(addresses.bridges.oasis.slice(2)) !== -1) {
                         return 'oasis';
+                    }
+                })(),
+                params: f.params,
+                result: f.result,
+                error: f.error,
+                cause: (() => {
+                    if (f.error) {
+                        const cause = blameRevert(f);
+                        if (cause) {
+                            return {
+                                error: cause.error,
+                                callType: cause.call_type,
+                                caller: cause.from_address,
+                                callee: cause.to_address,
+                                input: cause.input,
+                                value: cause.value.toString(10),
+                                gas: cause.gas,
+                            };
+                        }
                     }
                 })(),
             })),
@@ -208,7 +220,7 @@ function decodedToOrder(decoded) {
         takerAssetAmount: decoded[5],
         makerFee: decoded[6],
         takerFee: decoded[7],
-        expirationTimeInSeconds: decoded[8],
+        expirationTimeInSeconds: parseInt(decoded[8]),
         salt: decoded[9],
         makerAssetData: decoded[10],
         takerAssetData: decoded[11],

@@ -25,7 +25,7 @@ function createQuery(opts = {}) {
     const since = chrono.parseDate(opts.since || 'one day ago');
     const until = chrono.parseDate(opts.until || 'now');
     const selectors = opts.selectors || [];
-    const limit = opts.limit || 1024;
+    const limit = opts.limit || 1024 * 16;
     const targets = opts.targets || [];
     return `
         SELECT
