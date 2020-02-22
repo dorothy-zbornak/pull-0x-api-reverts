@@ -6,7 +6,7 @@
     "license": "Apache-2.0",
     "private": true,
     "scripts": {
-        "start": "node src/index.js"
+        "start": "node src/fetch.js"
     },
     "dependencies": {
         "@google-cloud/bigquery": "^4.7.0",

@@ -1,11 +1,9 @@
-const BigNumber = require('bignumber.js');
-const { BigQuery } = require('@google-cloud/bigquery');
 const _ = require('lodash');
 const abiEncoder = require('web3-eth-abi');
 const fs = require('mz/fs');
 const yargs = require('yargs');
 
-const fetchRevertTraces = require('./fetch-traces');
+const fetchRevertTraces = require('./query-traces');
 const addresses = require('./addresses');
 const artifacts = require('./artifacts');
 
@@ -71,7 +69,7 @@ function extractRevertDataFromTraces(traces) {
             caller: marketCall.from_address,
             callee: marketCall.to_address,
             status: trace.receipt_status,
-            affiliateId: affiliateBytes.slice((4 + 32 - 20) * 2),
+            affiliateId: `0x${affiliateBytes.slice((4 + 32 - 20) * 2)}`,
             value: trace.value.toString(10),
             gasPrice: trace.gas_price,
             gas: trace.gas,
