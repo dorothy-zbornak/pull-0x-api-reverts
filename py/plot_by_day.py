@@ -7,7 +7,7 @@ import numpy as np
 def count_error_types(fills):
     counts = {}
     for fill in fills:
-        if fill.error == 'unknown':
+        if fill.error == 'unknown' and fill.kind != 'native':
             key = f'bridge'
         else:
             key = fill.error
@@ -47,8 +47,20 @@ plt.stackplot(
     range(len(fills_by_days)),
     ys,
     labels=kinds,
+    alpha=0.5,
 )
-plt.xticks(range(len(counts_by_days)), [date.fromtimestamp(f[0].timestamp).strftime('%m/%d') for f in fills_by_days])
+plt.xticks(
+    range(len(counts_by_days)),
+    [
+        '%s (%d)' % (
+            date.fromtimestamp(f[0].timestamp).strftime('%m/%d'),
+            sum(counts_by_days[i].values()),
+        )
+        for i, f in enumerate(fills_by_days)
+    ],
+    horizontalalignment='right',
+    rotation=16
+)
 plt.legend()
 plt.axis((0, len(counts_by_days) - 1, plt.axis()[2], plt.axis()[3]))
 plt.title(f'0x-api per-fill revert reason by day ({len(fills)} total)')

@@ -4,14 +4,28 @@ from data import load_data
 from classify import classify_fills
 import numpy as np
 
+plt.subplots()[1].set_prop_cycle('color', [
+    'blue',
+    'red',
+    'green',
+    'pink',
+    'turquoise',
+    'coral',
+    'indigo',
+    'brown',
+    'gray',
+    'yellowgreen',
+    'hotpink',
+    'skyblue',
+    'gold'
+])
 def count_error_types(fills):
     counts = {}
     for fill in fills:
-        if fill.error == 'unknown' and fill.kind != 'native':
-            key = f'bridge'
-        else:
-            key = fill.error
-        counts[key] = counts.get(key, 0) + 1
+        if fill.kind != 'native' and fill.error == 'funds':
+            print(fill.tx)
+        k = f'{fill.kind}_{fill.error}'
+        counts[k] = counts.get(k, 0) + 1
     return counts
 
 def by_fn(fills):
@@ -32,7 +46,7 @@ def normalize_counts(counts_by_fns):
                 counts[k] = 0
     return counts_by_fns
 
-fills = classify_fills(load_data())
+fills = [f for f in classify_fills(load_data()) if f.kind != 'native']
 fills_by_fn = by_fn(fills)
 counts_by_fns = normalize_counts({k: count_error_types(v) for k, v in fills_by_fn.items()})
 print(counts_by_fns)
@@ -45,8 +59,8 @@ for kind in kinds:
     plt.bar(range(len(fns)), ys, bottom=prev_ys, label=kind, alpha=0.5)
     prev_ys = [a + b for a, b in zip(ys, prev_ys)]
 plt.xlabel('market function')
-plt.ylabel('% of fills by revert reasaons')
-plt.title(f'0x-api per-fill revert reason by market function')
+plt.ylabel('% of bridge fills by revert reasaons')
+plt.title(f'0x-api bridge fill revert reason by market function')
 plt.xticks(
     range(len(fns)),
     [f'{k} ({sum(counts_by_fns[k].values())})' for k in fns],

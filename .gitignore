@@ -1,5 +1,6 @@
 node_modules
-credentials.json
-output.json
+*.json
+!package.json
 **/*.log
-src/exp
+**/*.pyc
+build

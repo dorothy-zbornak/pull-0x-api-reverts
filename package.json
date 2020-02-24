@@ -10,12 +10,16 @@
         "classify": "python py/classify.py",
         "plot-by-day": "python py/plot_by_day.py",
         "plot-by-affiliate": "python py/plot_by_affiliate.py",
-        "plot-by-fn": "python py/plot_by_fn.py"
+        "plot-by-fn": "python py/plot_by_fn.py",
+        "plot-bridge-revert-by-fn": "python py/plot_bridge_revert_by_fn.py",
+        "replay-bridge-fills": "yarn build-contracts && python py/find_bridge_fills.py | node src/replay-bridge-fills.js",
+        "build-contracts": "solc --evm-version istanbul --overwrite -o ./build --pretty-json --abi --bin-runtime ./src/contracts/**.sol"
     },
     "dependencies": {
         "@google-cloud/bigquery": "^4.7.0",
         "bignumber.js": "^9.0.0",
         "chrono-node": "^1.4.3",
+        "flex-contract": "^2.1.0",
         "lodash": "^4.17.15",
         "mz": "^2.7.0",
         "web3-eth-abi": "^1.2.6",

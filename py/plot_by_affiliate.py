@@ -7,7 +7,7 @@ import numpy as np
 def count_error_types(fills):
     counts = {}
     for fill in fills:
-        if fill.error == 'unknown':
+        if fill.error == 'unknown' and fill.kind != 'native':
             key = f'bridge'
         else:
             key = fill.error
@@ -55,7 +55,7 @@ plt.ylabel('% of fills by revert reasaons')
 plt.title(f'0x-api per-fill revert reason by affiliate')
 plt.xticks(
     range(len(affiliates)),
-    [f'{a[:5]}...' for a in affiliates],
+    [f'{a[:5]}... ({sum(counts_by_affiliates[a].values())})' for a in affiliates],
     rotation=30,
     horizontalalignment='right',
 )
