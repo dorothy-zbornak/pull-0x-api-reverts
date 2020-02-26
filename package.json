@@ -12,6 +12,7 @@
         "plot-by-affiliate": "python py/plot_by_affiliate.py",
         "plot-by-fn": "python py/plot_by_fn.py",
         "plot-bridge-revert-by-fn": "python py/plot_bridge_revert_by_fn.py",
+        "plot-oog-by-bridge": "python py/plot_oog_by_bridge.py",
         "replay-bridge-fills": "yarn build-contracts && python py/find_bridge_fills.py | node src/replay-bridge-fills.js",
         "build-contracts": "solc --evm-version istanbul --overwrite -o ./build --pretty-json --abi --bin-runtime ./src/contracts/**.sol"
     },

@@ -45,7 +45,7 @@ for kind in kinds:
     plt.bar(range(len(fns)), ys, bottom=prev_ys, label=kind, alpha=0.5)
     prev_ys = [a + b for a, b in zip(ys, prev_ys)]
 plt.xlabel('market function')
-plt.ylabel('% of fills by revert reasaons')
+plt.ylabel('% of fills by revert reasons')
 plt.title(f'0x-api per-fill revert reason by market function')
 plt.xticks(
     range(len(fns)),

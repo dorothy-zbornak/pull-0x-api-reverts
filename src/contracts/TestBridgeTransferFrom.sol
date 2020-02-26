@@ -28,9 +28,11 @@ contract TestBridgeTransferFrom {
         address payable takerToken;
         uint256 makerAmount;
         uint256 takerAmount;
+        address originalTakerToken;
     }
 
     function fill(FillParams memory params) public returns (uint256 takerAmount) {
+        TestERC20(params.takerToken).setOriginal(params.originalTakerToken);
         TestERC20(params.takerToken).setBalance(params.bridge, params.takerAmount);
         IBridge(params.bridge).bridgeTransferFrom(
             params.makerToken,

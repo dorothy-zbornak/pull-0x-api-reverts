@@ -54,8 +54,8 @@ function extractRevertDataFromTraces(traces) {
         if (!marketCall || !marketCall.error) {
             continue;
         }
-        const affiliateBytes = marketCall.input.slice(-36 * 2)
-        if (!affiliateBytes.startsWith('fbc019a7')) {
+        const metadata = getMarketCallMetadata(marketCall.input);
+        if (!metadata) {
             continue;
         }
         const fillOrderCalls = findFillOrderCalls(marketCall);
@@ -69,7 +69,8 @@ function extractRevertDataFromTraces(traces) {
             caller: marketCall.from_address,
             callee: marketCall.to_address,
             status: trace.receipt_status,
-            affiliateId: `0x${affiliateBytes.slice((4 + 32 - 20) * 2)}`,
+            affiliateId: metadata.affiliateId,
+            quoteTimestamp: metadata.timestamp,
             value: trace.value.toString(10),
             gasPrice: trace.gas_price,
             gas: trace.gas,
@@ -117,6 +118,20 @@ function extractRevertDataFromTraces(traces) {
         });
     }
     return data.sort((a, b) => a.height - b.height);
+}
+
+function getMarketCallMetadata(callInput) {
+    if (callInput.slice(-36 * 2, -36 * 2 + 8) === 'fbc019a7') {
+        return {
+            affiliateId: `0x${callInput.slice(-20 * 2)}`,
+            timestamp: 0,
+        };
+    } else if (callInput.slice(-68 * 2, -68 * 2 + 8) === '869584cd') {
+        return {
+            affiliateId: `0x${callInput.slice(-52 * 2, -32 * 2)}`,
+            timestamp: parseInt(callInput.slice(-8 * 2), 16),
+        };
+    }
 }
 
 function findMarketCall(root) {

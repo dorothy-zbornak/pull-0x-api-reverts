@@ -24,8 +24,13 @@ EXCHANGE_FILL_ORDER_SELECTOR = '0x9b44d556'
 ERC20_TRANSFER_FROM_SELECTOR = '0x23b872dd'
 IS_VALID_SIGNATURE_SELECTORS = ['0x1626ba7e']
 EXPECTED_GAS = int(5e9)
+SLOW_LATENCY = 90
 
 def _classify_fill_error(tx, fill):
+    latency = tx['timestamp'] - tx['quoteTimestamp']\
+        if tx['quoteTimestamp'] != 0 else 0
+    if latency > SLOW_LATENCY:
+        return 'slow'
     if int(tx['gasPrice']) < EXPECTED_GAS:
         return 'gas_price'
     if fill['error'] == 'Out of gas':
@@ -50,10 +55,11 @@ def _classify_fill_error(tx, fill):
         if cause['caller'] == STAKING_PROXY:
             return 'fee'
         if cause['caller'] == ERC20_PROXY:
-            from_address = '0x' + cause['input'][2 + 16 * 2 : 2 + 36 * 2]
-            if from_address == order['makerAddress']:
-                return 'maker_funds'
-            return 'taker_funds'
+            # from_address = '0x' + cause['input'][2 + 16 * 2 : 2 + 36 * 2]
+            # if from_address == order['makerAddress']:
+            #     return 'maker_funds'
+            # return 'taker_funds'
+            return 'funds'
     return 'unknown'
 
 class Fill:
@@ -71,6 +77,7 @@ class Fill:
     fn = None
     kind = None
     value = None
+    quote_timestamp = None
     error = None
     interfered = None
 
@@ -92,6 +99,7 @@ def classify_fills(txs):
             f.to_address = tx['to']
             f.kind = fill.get('hint') or 'native'
             f.value = int(tx['value'])
+            f.quote_timestamp = tx['quoteTimestamp']
             f.error = _classify_fill_error(tx, fill)
             f.caller = tx['caller']
             f.callee = tx['callee']
