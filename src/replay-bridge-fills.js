@@ -18,10 +18,9 @@ const BYTECODES = {
     TestERC20: '0x' + fs.readFileSync(`${BUILD_ROOT}/TestERC20.bin-runtime`),
 };
 
-const GETH_WS = 'ws://localhost:8546';
 const testContract = new FlexContract(
     ABIS.TestBridgeTransferFrom,
-    { providerURI: GETH_WS },
+    { providerURI: process.env.NODE_RPC, net: require('net') },
 );
 const eth = testContract.eth;
 
@@ -46,13 +45,18 @@ function toHex(v) {
     return `0x${new BigNumber(v).integerValue().toString(16)}`;
 }
 
+const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+
 async function runTests(fills) {
     const testContractAddress = `0x${crypto.randomBytes(20).toString('hex')}`;
     const originalTakerTokenAddress = `0x${crypto.randomBytes(20).toString('hex')}`;
     for (const fill of fills) {
+        const BUFFER = 0.005;
+        const makerAmount = new BigNumber(fill.order.makerAssetAmount).times(1 - BUFFER).integerValue();
         const takerToken = `0x${Buffer.from(fill.order.takerAssetData.slice(2), 'hex').slice(16).toString('hex')}`;
-        const bridge = `0x${Buffer.from(fill.order.makerAssetData.slice(2), 'hex').slice(16, 16 + 20).toString('hex')}`;
-        const makerToken = `0x${Buffer.from(fill.order.makerAssetData.slice(2), 'hex').slice(48, 48 + 20).toString('hex')}`;
+        const makerToken = `0x${Buffer.from(fill.order.makerAssetData.slice(2), 'hex').slice(16, 16 + 20).toString('hex')}`;
+        const bridge = `0x${Buffer.from(fill.order.makerAssetData.slice(2), 'hex').slice(48, 48 + 20).toString('hex')}`;
+        console.log(fill.tx, fill.kind, makerToken, takerToken, fill.timestamp - fill.quote_timestamp);
         let originalTakerTokenBytecode;
         try {
             originalTakerTokenBytecode = await eth.rpc.getCode(takerToken);
@@ -66,14 +70,16 @@ async function runTests(fills) {
                 [
                     {
                         to: testContractAddress,
-                        gas: toHex(fill.gas),
+                        gas: toHex(7e6),
                         gasPrice: toHex(fill.gas_price),
-                        value: '0x0',
+                        value: takerToken === WETH
+                            ? '0x'+new BigNumber(fill.order.takerAssetAmount).toString(16)
+                            : '0x0',
                         data: await testContract.fill({
                             bridge,
                             makerToken,
                             takerToken,
-                            makerAmount: fill.order.makerAssetAmount,
+                            makerAmount,
                             takerAmount: fill.order.takerAssetAmount,
                             originalTakerToken: originalTakerTokenAddress,
                         }).encode(),
@@ -86,10 +92,15 @@ async function runTests(fills) {
                     },
                 ],
             );
+            const actualMakerAmount = new BigNumber(result);
+            if (actualMakerAmount.gte(makerAmount)) {
+                console.log('\tpass');
+            } else {
+                console.log('\tfail');
+            }
         } catch (err) {
             console.error(err);
             continue;
         }
-        console.log(result);
     }
 }

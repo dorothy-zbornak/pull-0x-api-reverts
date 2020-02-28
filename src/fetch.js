@@ -69,6 +69,7 @@ function extractRevertDataFromTraces(traces) {
             caller: marketCall.from_address,
             callee: marketCall.to_address,
             status: trace.receipt_status,
+            input: trace.input,
             affiliateId: metadata.affiliateId,
             quoteTimestamp: metadata.timestamp,
             value: trace.value.toString(10),

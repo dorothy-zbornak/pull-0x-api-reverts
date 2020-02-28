@@ -13,12 +13,9 @@ interface IBridge {
     ) external returns (bytes4);
 }
 
-interface IERC20 {
-    function balanceOf(address owner) external returns (uint256);
-}
-
 contract TestBridgeTransferFrom {
-    bytes32 ORIGINAL_ADDRESS_KEY = 0xc04f780dfc51d9623e72331bafc42635e5734de82a00cd0f4499fd5e3f3e2d46;
+    address constant internal WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    bytes32 constant internal ORIGINAL_ADDRESS_KEY = 0xc04f780dfc51d9623e72331bafc42635e5734de82a00cd0f4499fd5e3f3e2d46;
     mapping(address => uint256) public balanceOf;
     mapping(bytes32 => bytes32) private _stash;
 
@@ -31,7 +28,12 @@ contract TestBridgeTransferFrom {
         address originalTakerToken;
     }
 
-    function fill(FillParams memory params) public returns (uint256 takerAmount) {
+    receive() payable external {}
+
+    function fill(FillParams memory params) public payable returns (uint256 takerAmount) {
+        if (params.takerToken == WETH) {
+            params.takerToken.transfer(msg.value);
+        }
         TestERC20(params.takerToken).setOriginal(params.originalTakerToken);
         TestERC20(params.takerToken).setBalance(params.bridge, params.takerAmount);
         IBridge(params.bridge).bridgeTransferFrom(
@@ -41,6 +43,6 @@ contract TestBridgeTransferFrom {
             params.makerAmount,
             abi.encode(params.takerToken)
         );
-        return IERC20(params.makerToken).balanceOf(address(this));
+        return TestERC20(params.makerToken).balanceOf(address(this));
     }
 }
