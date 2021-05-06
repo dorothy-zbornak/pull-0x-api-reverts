@@ -19,7 +19,7 @@
     "dependencies": {
         "@google-cloud/bigquery": "^4.7.0",
         "bignumber.js": "^9.0.0",
-        "chrono-node": "^1.4.3",
+        "chrono-node": "^2.2.4",
         "flex-contract": "^2.1.0",
         "lodash": "^4.17.15",
         "mz": "^2.7.0",
